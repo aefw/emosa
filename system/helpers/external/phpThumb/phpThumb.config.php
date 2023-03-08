@@ -244,7 +244,8 @@ $PHPTHUMB_DEFAULTS_DISABLEGETPARAMS  = false; // if true, GETstring parameters w
 
 
 /* END DEFAULT PARAMETERS SECTION */
-$PHPTHUMB_CONFIG = get_config('PHPTHUMB_CONFIG');
+
+$PHPTHUMB_CONFIG = get_config('PHPTHUMB_CONFIG');
 
 
 
