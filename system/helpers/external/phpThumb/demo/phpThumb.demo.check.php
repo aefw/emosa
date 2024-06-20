@@ -151,7 +151,7 @@ echo '<td>DO NOT DISABLE THIS ON ANY PUBLIC-ACCESSIBLE SERVER. If disabled, your
 
 echo '<tr><th>phpThumb.config.php<br>[high_security_password]</th>';
 $password_complexity = phpthumb_functions::PasswordStrength($PHPTHUMB_CONFIG['high_security_password']);
-echo '<th colspan="2" style="background-color: '.(($password_complexity >= 20) ? 'lime' : ((strlen($PHPTHUMB_CONFIG['high_security_password']) > 0) ? 'orange' : 'red')).'">'.(($password_complexity >= 20) ? 'sufficiently complex' : ((strlen($PHPTHUMB_CONFIG['high_security_password']) > 0) ? 'not complex enough' : 'not set')).'</th>';
+echo '<th colspan="2" style="background-color: '.(($password_complexity >= 20) ? 'lime' : ((strlen((string) $PHPTHUMB_CONFIG['high_security_password']) > 0) ? 'orange' : 'red')).'">'.(($password_complexity >= 20) ? 'sufficiently complex' : ((strlen((string) $PHPTHUMB_CONFIG['high_security_password']) > 0) ? 'not complex enough' : 'not set')).'</th>';
 echo '<td>DO NOT DISABLE THIS ON ANY PUBLIC-ACCESSIBLE SERVER. If disabled, your server is more vulnerable to hacking attempts, both on your server and via your server to other servers. When enabled, requires "high_security_password" set to be set and requires the use of phpThumbURL() function (at the bottom of phpThumb.config.php) to generate hashed URLs.</td></tr>';
 
 
@@ -281,7 +281,7 @@ echo ' <span style="cursor: help;" title="is_readable"                  >['. (in
 echo ' <span style="cursor: help;" title="is_executable"                >['. (int) (@is_executable($phpThumb->config_imagemagick_path)) .']</span> ';
 echo '</div>';
 echo '<div style="color: blue; font-family: monospace;">'.htmlspecialchars($phpThumb->ImageMagickCommandlineBase()).'</div>';
-echo ($ServerInfo['im_version'] ? $ServerInfo['im_version'] : 'n/a');
+echo ($ServerInfo['im_version'] ?: 'n/a');
 echo ($IMreleaseDate ? '<br><br>This version of ImageMagick is '.NiceTimeFormatting($IMversionAge).' old<br>(see <a href="http://www.imagemagick.org/">www.imagemagick.org</a> for new versions)' : '');
 echo '</th><td>ImageMagick is faster than GD, can process larger images without PHP memory_limit issues, can resize animated GIFs. phpThumb can perform most operations with ImageMagick only, even if GD is not available.</td></tr>';
 
@@ -422,7 +422,7 @@ $FunctionsExist = array(
 foreach ($FunctionsExist as $function => $details) {
 	list($color, $description) = $details;
 	echo '<tr><th>'.$function.'</th><th colspan="2" style="background-color: ';
-	if (function_exists(strtolower($function))) {
+	if (function_exists(strtolower((string) $function))) {
 		echo 'lime;">TRUE';
 	} else {
 		echo $color.';">FALSE';
@@ -476,46 +476,54 @@ echo '<tr><th>memory_limit:</th><th style="background-color: ';
 $memory_limit = @get_cfg_var('memory_limit');
 if (!$memory_limit) {
 	echo 'lime';
-} elseif ($memory_limit >= 32) {
+} elseif ($memory_limit >= 256) {
 	echo 'lime';
-} elseif ($memory_limit >= 24) {
+} elseif ($memory_limit >= 128) {
 	echo 'lightgreen';
-} elseif ($memory_limit >= 16) {
+} elseif ($memory_limit >= 64) {
 	echo 'green';
-} elseif ($memory_limit >= 12) {
+} elseif ($memory_limit >= 32) {
 	echo 'darkgreen';
-} elseif ($memory_limit >= 8) {
+} elseif ($memory_limit >= 16) {
 	echo 'olive';
-} elseif ($memory_limit >= 4) {
+} elseif ($memory_limit >= 8) {
 	echo 'yellow';
-} elseif ($memory_limit >= 2) {
+} elseif ($memory_limit >= 4) {
 	echo 'orange';
 } else {
 	echo 'red';
 }
-echo ';">'.($memory_limit ? $memory_limit : '<i>unlimited</i>').'</th><th style="background-color: ';
-$memory_limit = @ini_get('memory_limit');
+echo ';">'.($memory_limit ?: '<i>unlimited</i>').'</th><th style="background-color: ';
+$memory_limit_bytes = 0;
+if ($memory_limit = @ini_get('memory_limit')) {
+	$memory_limit_bytes = intval($memory_limit);
+	if (strtoupper(substr((string) $memory_limit, -1, 1)) == 'M') {
+		$memory_limit_bytes = substr((string) $memory_limit, 0, -1) * 1024 * 1024;
+	} elseif (strtoupper(substr((string) $memory_limit, -1, 1)) == 'G') {
+		$memory_limit_bytes = substr((string) $memory_limit, 0, -1) * 1024 * 1024 * 1024;
+	}
+}
 if (!$memory_limit) {
 	echo 'lime';
-} elseif ($memory_limit >= 32) {
+} elseif ($memory_limit >= 256) {
 	echo 'lime';
-} elseif ($memory_limit >= 24) {
+} elseif ($memory_limit >= 128) {
 	echo 'lightgreen';
-} elseif ($memory_limit >= 16) {
+} elseif ($memory_limit >= 64) {
 	echo 'green';
-} elseif ($memory_limit >= 12) {
+} elseif ($memory_limit >= 32) {
 	echo 'darkgreen';
-} elseif ($memory_limit >= 8) {
+} elseif ($memory_limit >= 16) {
 	echo 'olive';
-} elseif ($memory_limit >= 4) {
+} elseif ($memory_limit >= 8) {
 	echo 'yellow';
-} elseif ($memory_limit >= 2) {
+} elseif ($memory_limit >= 4) {
 	echo 'orange';
 } else {
 	echo 'red';
 }
-echo ';">'.($memory_limit ? $memory_limit : '<i>unlimited</i>').'</th>';
-echo '<td>The higher the better. Divide by 5 to get maximum megapixels of source image that can be thumbnailed (without ImageMagick).'.($memory_limit ? ' Your setting ('.$memory_limit.') allows images up to approximately '.number_format($memory_limit / 5, 1).' megapixels' : '').'</td></tr>';
+echo ';">'.($memory_limit ?: '<i>unlimited</i>').'</th>';
+echo '<td>The higher the better. Divide by 5 to get maximum megapixels of source image that can be thumbnailed (without ImageMagick).'.($memory_limit ? ' Your setting ('.$memory_limit.') allows images up to approximately '.number_format($memory_limit_bytes / (5*1024*1024), 1).' megapixels' : '').'</td></tr>';
 
 echo '</table>';
 

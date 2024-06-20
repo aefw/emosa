@@ -114,15 +114,15 @@ class phpthumb_filters {
 			// Move copies of the image around one pixel at the time and merge them with weight
 			// according to the matrix. The same matrix is simply repeated for higher radii.
 			for ($i = 0; $i < $radius; $i++)	{
-				imagecopy     ($imgBlur, $gdimg, 0, 0, 1, 1, $w - 1, $h - 1);            // up left
-				imagecopymerge($imgBlur, $gdimg, 1, 1, 0, 0, $w,     $h,     50.00000);  // down right
-				imagecopymerge($imgBlur, $gdimg, 0, 1, 1, 0, $w - 1, $h,     33.33333);  // down left
-				imagecopymerge($imgBlur, $gdimg, 1, 0, 0, 1, $w,     $h - 1, 25.00000);  // up right
-				imagecopymerge($imgBlur, $gdimg, 0, 0, 1, 0, $w - 1, $h,     33.33333);  // left
-				imagecopymerge($imgBlur, $gdimg, 1, 0, 0, 0, $w,     $h,     25.00000);  // right
-				imagecopymerge($imgBlur, $gdimg, 0, 0, 0, 1, $w,     $h - 1, 20.00000);  // up
-				imagecopymerge($imgBlur, $gdimg, 0, 1, 0, 0, $w,     $h,     16.666667); // down
-				imagecopymerge($imgBlur, $gdimg, 0, 0, 0, 0, $w,     $h,     50.000000); // center
+				imagecopy     ($imgBlur, $gdimg, 0, 0, 1, 1, $w - 1, $h - 1);      // up left
+				imagecopymerge($imgBlur, $gdimg, 1, 1, 0, 0, $w,     $h,     50);  // down right
+				imagecopymerge($imgBlur, $gdimg, 0, 1, 1, 0, $w - 1, $h,     33);  // down left
+				imagecopymerge($imgBlur, $gdimg, 1, 0, 0, 1, $w,     $h - 1, 25);  // up right
+				imagecopymerge($imgBlur, $gdimg, 0, 0, 1, 0, $w - 1, $h,     33);  // left
+				imagecopymerge($imgBlur, $gdimg, 1, 0, 0, 0, $w,     $h,     25);  // right
+				imagecopymerge($imgBlur, $gdimg, 0, 0, 0, 1, $w,     $h - 1, 20);  // up
+				imagecopymerge($imgBlur, $gdimg, 0, 1, 0, 0, $w,     $h,     17);  // down
+				imagecopymerge($imgBlur, $gdimg, 0, 0, 0, 0, $w,     $h,     50);  // center
 				imagecopy     ($gdimg, $imgBlur, 0, 0, 0, 0, $w,     $h);
 			}
 			return true;
@@ -238,9 +238,9 @@ class phpthumb_filters {
 			if ($targetColor == 'gray') {
 				$targetColor = '808080';
 			}
-			$r = round($amountPct * hexdec(substr($targetColor, 0, 2)));
-			$g = round($amountPct * hexdec(substr($targetColor, 2, 2)));
-			$b = round($amountPct * hexdec(substr($targetColor, 4, 2)));
+			$r = round($amountPct * hexdec(substr((string) $targetColor, 0, 2)));
+			$g = round($amountPct * hexdec(substr((string) $targetColor, 2, 2)));
+			$b = round($amountPct * hexdec(substr((string) $targetColor, 4, 2)));
 			if (imagefilter($gdimg, IMG_FILTER_COLORIZE, $r, $g, $b)) {
 				return true;
 			}
@@ -251,9 +251,9 @@ class phpthumb_filters {
 		// overridden below for grayscale
 		$TargetPixel = array();
 		if ($targetColor != 'gray') {
-			$TargetPixel['red']   = hexdec(substr($targetColor, 0, 2));
-			$TargetPixel['green'] = hexdec(substr($targetColor, 2, 2));
-			$TargetPixel['blue']  = hexdec(substr($targetColor, 4, 2));
+			$TargetPixel['red']   = hexdec(substr((string) $targetColor, 0, 2));
+			$TargetPixel['green'] = hexdec(substr((string) $targetColor, 2, 2));
+			$TargetPixel['blue']  = hexdec(substr((string) $targetColor, 4, 2));
 		}
 
 		for ($x = 0, $xMax = imagesx($gdimg); $x < $xMax; $x++) {
@@ -287,8 +287,10 @@ class phpthumb_filters {
 		if (($bottom > 0) && ($bottom < 1)) { $bottom = round($bottom * $oldH); }
 		$right  = min($oldW - $left - 1, $right);
 		$bottom = min($oldH - $top  - 1, $bottom);
-		$newW = $oldW - $left - $right;
-		$newH = $oldH - $top  - $bottom;
+		$newW = (int)($oldW - $left - $right);
+		$newH = (int)($oldH - $top  - $bottom);
+        $left = (int)$left;
+        $top  = (int)$top;
 
 		if ($imgCropped = imagecreatetruecolor($newW, $newH)) {
 			imagecopy($imgCropped, $gdimg, 0, 0, $left, $top, $newW, $newH);
@@ -362,8 +364,8 @@ class phpthumb_filters {
 					//for ($i = 0; $i < $width; $i++) {
 					for ($i = 0; $i < 1; $i++) {
 						if (!isset($PixelMap[$x][$y]['alpha']) || ($PixelMap[$x][$y]['alpha'] > 0)) {
-							if (isset($PixelMap[$x + $Offset['x']][$y + $Offset['y']]['alpha']) && ($PixelMap[$x + $Offset['x']][$y + $Offset['y']]['alpha'] < 127)) {
-								$thisColor = phpthumb_functions::ImageHexColorAllocate($gdimg, $hexcolor, false, $PixelMap[$x + $Offset['x']][$y + $Offset['y']]['alpha']);
+							if (isset($PixelMap[$x + (int)$Offset['x']][$y + (int)$Offset['y']]['alpha']) && ($PixelMap[$x + (int)$Offset['x']][$y + (int)$Offset['y']]['alpha'] < 127)) {
+								$thisColor = phpthumb_functions::ImageHexColorAllocate($gdimg, $hexcolor, false, $PixelMap[$x + (int)$Offset['x']][$y + (int)$Offset['y']]['alpha']);
 								imagesetpixel($gdimg_dropshadow_temp, $x, $y, $thisColor);
 							}
 						}
@@ -832,9 +834,9 @@ class phpthumb_filters {
 						imagecolorset(
 							$gdimg_source,
 							imagecolortransparent($gdimg_source),
-							hexdec(substr($config_background_hexcolor, 0, 2)),
-							hexdec(substr($config_background_hexcolor, 2, 2)),
-							hexdec(substr($config_background_hexcolor, 4, 2)));
+							hexdec(substr((string) $config_background_hexcolor, 0, 2)),
+							hexdec(substr((string) $config_background_hexcolor, 2, 2)),
+							hexdec(substr((string) $config_background_hexcolor, 4, 2)));
 
 						imagecolortransparent($gdimg_source, -1);
 
@@ -942,9 +944,9 @@ class phpthumb_filters {
 		if (phpthumb_functions::version_compare_replacement(PHP_VERSION, '5.0.0', '>=') && phpthumb_functions::gd_is_bundled()) {
 			if (imagefilter($gdimg, IMG_FILTER_GRAYSCALE)) {
 
-				$r = round($amountPct * hexdec(substr($targetColor, 0, 2)));
-				$g = round($amountPct * hexdec(substr($targetColor, 2, 2)));
-				$b = round($amountPct * hexdec(substr($targetColor, 4, 2)));
+				$r = round($amountPct * hexdec(substr((string) $targetColor, 0, 2)));
+				$g = round($amountPct * hexdec(substr((string) $targetColor, 2, 2)));
+				$b = round($amountPct * hexdec(substr((string) $targetColor, 4, 2)));
 				if (imagefilter($gdimg, IMG_FILTER_COLORIZE, $r, $g, $b)) {
 					return true;
 				}
@@ -959,9 +961,9 @@ class phpthumb_filters {
 			}
 		}
 
-		$TargetPixel['red']   = hexdec(substr($targetColor, 0, 2));
-		$TargetPixel['green'] = hexdec(substr($targetColor, 2, 2));
-		$TargetPixel['blue']  = hexdec(substr($targetColor, 4, 2));
+		$TargetPixel['red']   = hexdec(substr((string) $targetColor, 0, 2));
+		$TargetPixel['green'] = hexdec(substr((string) $targetColor, 2, 2));
+		$TargetPixel['blue']  = hexdec(substr((string) $targetColor, 4, 2));
 
 		$ImageSX = imagesx($gdimg);
 		$ImageSY = imagesy($gdimg);
@@ -1009,16 +1011,16 @@ class phpthumb_filters {
 		$width  = imagesx($gdimg);
 		$height = imagesy($gdimg);
 		if ($gdimg_mask = imagecreatetruecolor($width, $height)) {
-			$R = hexdec(substr($hexcolor, 0, 2));
-			$G = hexdec(substr($hexcolor, 2, 2));
-			$B = hexdec(substr($hexcolor, 4, 2));
+			$R = hexdec(substr((string) $hexcolor, 0, 2));
+			$G = hexdec(substr((string) $hexcolor, 2, 2));
+			$B = hexdec(substr((string) $hexcolor, 4, 2));
 			$targetPixel = array('red'=>$R, 'green'=>$G, 'blue'=>$B);
 			$cutoffRange = $max_limit - $min_limit;
 			for ($x = 0; $x < $width; $x++) {
 				for ($y = 0; $y < $height; $y++) {
 					$currentPixel = phpthumb_functions::GetPixelColor($gdimg, $x, $y);
 					$colorDiff = phpthumb_functions::PixelColorDifferencePercent($currentPixel, $targetPixel);
-					$grayLevel = min($cutoffRange, max(0, -$min_limit + $colorDiff)) * (255 / max(1, $cutoffRange));
+					$grayLevel = (int)min($cutoffRange, max(0, -$min_limit + $colorDiff)) * (255 / max(1, $cutoffRange));
 					$newColor = imagecolorallocate($gdimg_mask, $grayLevel, $grayLevel, $grayLevel);
 					imagesetpixel($gdimg_mask, $x, $y, $newColor);
 				}
@@ -1075,9 +1077,9 @@ class phpthumb_filters {
 	public function WhiteBalance(&$gdimg, $targetColor='') {
 		if (phpthumb_functions::IsHexColor($targetColor)) {
 			$targetPixel = array(
-				'red'   => hexdec(substr($targetColor, 0, 2)),
-				'green' => hexdec(substr($targetColor, 2, 2)),
-				'blue'  => hexdec(substr($targetColor, 4, 2))
+				'red'   => hexdec(substr((string) $targetColor, 0, 2)),
+				'green' => hexdec(substr((string) $targetColor, 2, 2)),
+				'blue'  => hexdec(substr((string) $targetColor, 4, 2))
 			);
 		} else {
 			$Analysis = $this->HistogramAnalysis($gdimg, false);
@@ -1127,16 +1129,20 @@ class phpthumb_filters {
 		}
 		$lineheight = min(100.0, max(0.01, (float) $lineheight));
 
-		$metaTextArray = array(
-			'^Fb' =>       $this->phpThumbObject->getimagesizeinfo['filesize'],
-			'^Fk' => round($this->phpThumbObject->getimagesizeinfo['filesize'] / 1024),
-			'^Fm' => round($this->phpThumbObject->getimagesizeinfo['filesize'] / 1048576),
-			'^X'  => $this->phpThumbObject->getimagesizeinfo[0],
-			'^Y'  => $this->phpThumbObject->getimagesizeinfo[1],
-			'^x'  => imagesx($gdimg),
-			'^y'  => imagesy($gdimg),
-			'^^'  => '^',
-		);
+        $metaTextArray = array();
+        if (is_array($this->phpThumbObject->getimagesizeinfo)) {
+            if (array_key_exists('filesize',$this->phpThumbObject->getimagesizeinfo)) {
+                $metaTextArray['^Fb'] =       $this->phpThumbObject->getimagesizeinfo['filesize'];
+                $metaTextArray['^Fk'] = round($this->phpThumbObject->getimagesizeinfo['filesize'] / 1024);
+                $metaTextArray['^Fm'] = round($this->phpThumbObject->getimagesizeinfo['filesize'] / 1048576);
+            }
+			$metaTextArray['^X'] = $this->phpThumbObject->getimagesizeinfo[0];
+			$metaTextArray['^Y'] = $this->phpThumbObject->getimagesizeinfo[1];
+		}
+        $metaTextArray['^x'] = imagesx($gdimg);
+        $metaTextArray['^y'] = imagesy($gdimg);
+        $metaTextArray['^^'] = '^';
+
 		$text = strtr($text, $metaTextArray);
 
 		$text = str_replace(array(
@@ -1308,7 +1314,7 @@ class phpthumb_filters {
 			$text_width  = 0;
 			$text_height = 0;
 			foreach ($textlines as $dummy => $line) {
-				$text_width   = max($text_width, imagefontwidth($size) * strlen($line));
+				$text_width   = max($text_width, imagefontwidth($size) * strlen((string) $line));
 				$text_height += imagefontheight($size);
 			}
 			if ($img_watermark = phpthumb_functions::ImageCreateFunction($text_width, $text_height)) {
@@ -1340,19 +1346,19 @@ class phpthumb_filters {
 				foreach ($textlines as $key => $line) {
 					switch ($alignment) {
 						case 'C':
-							$x_offset = round(($text_width - (imagefontwidth($size) * strlen($line))) / 2);
+							$x_offset = round(($text_width - (imagefontwidth($size) * strlen((string) $line))) / 2);
 							$originOffsetX = (imagesx($gdimg) - imagesx($img_watermark)) / 2;
 							$originOffsetY = (imagesy($gdimg) - imagesy($img_watermark)) / 2;
 							break;
 
 						case 'T':
-							$x_offset = round(($text_width - (imagefontwidth($size) * strlen($line))) / 2);
+							$x_offset = round(($text_width - (imagefontwidth($size) * strlen((string) $line))) / 2);
 							$originOffsetX = (imagesx($gdimg) - imagesx($img_watermark)) / 2;
 							$originOffsetY = $margin;
 							break;
 
 						case 'B':
-							$x_offset = round(($text_width - (imagefontwidth($size) * strlen($line))) / 2);
+							$x_offset = round(($text_width - (imagefontwidth($size) * strlen((string) $line))) / 2);
 							$originOffsetX = (imagesx($gdimg) - imagesx($img_watermark)) / 2;
 							$originOffsetY = imagesy($gdimg) - imagesy($img_watermark) - $margin;
 							break;
@@ -1376,13 +1382,13 @@ class phpthumb_filters {
 							break;
 
 						case 'R':
-							$x_offset = $text_width - (imagefontwidth($size) * strlen($line));
+							$x_offset = $text_width - (imagefontwidth($size) * strlen((string) $line));
 							$originOffsetX = imagesx($gdimg) - imagesx($img_watermark) - $margin;
 							$originOffsetY = (imagesy($gdimg) - imagesy($img_watermark)) / 2;
 							break;
 
 						case 'TR':
-							$x_offset = $text_width - (imagefontwidth($size) * strlen($line));
+							$x_offset = $text_width - (imagefontwidth($size) * strlen((string) $line));
 							$originOffsetX = imagesx($gdimg) - imagesx($img_watermark) - $margin;
 							$originOffsetY = $margin;
 							break;
@@ -1392,7 +1398,7 @@ class phpthumb_filters {
 							if (!empty($originOffsetX) || !empty($originOffsetY)) {
 								// absolute pixel positioning
 							} else {
-								$x_offset = $text_width - (imagefontwidth($size) * strlen($line));
+								$x_offset = $text_width - (imagefontwidth($size) * strlen((string) $line));
 								$originOffsetX = imagesx($gdimg) - imagesx($img_watermark) - $margin;
 								$originOffsetY = imagesy($gdimg) - imagesy($img_watermark) - $margin;
 							}
@@ -1430,7 +1436,8 @@ class phpthumb_filters {
 			$watermark_source_width    = imagesx($img_watermark);
 			$watermark_source_height   = imagesy($img_watermark);
 			$watermark_opacity_percent = max(0, min(100, $opacity));
-			$margin_y = (null === $margin_y ? $margin_x : $margin_y);
+            $margin_x = (null === $margin_x ? 0 : $margin_y);       // if null fill 0 (or 5?)
+            $margin_y = (null === $margin_y ? $margin_x : $margin_y);
 			$watermark_margin_x = ((($margin_x > 0) && ($margin_x < 1)) ? round((1 - $margin_x) * $img_source_width)  : $margin_x);
 			$watermark_margin_y = ((($margin_y > 0) && ($margin_y < 1)) ? round((1 - $margin_y) * $img_source_height) : $margin_y);
 			$watermark_destination_x = 0;
